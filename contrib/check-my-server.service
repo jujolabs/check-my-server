@@ -1,0 +1,19 @@
+[Unit]
+Description=check-my-server Prometheus exporter
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/check-my-server
+Restart=on-failure
+RestartSec=5
+DynamicUser=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+Environment=CMS_ADDR=0.0.0.0:9100
+Environment=CMS_INTERVAL=15
+Environment=RUST_LOG=info
+
+[Install]
+WantedBy=multi-user.target

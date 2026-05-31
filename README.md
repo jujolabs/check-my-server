@@ -41,6 +41,24 @@ CMS_ADDR=0.0.0.0:9200 CMS_INTERVAL=30 RUST_LOG=debug ./target/release/check-my-s
 - If a module fails (e.g. unreadable `/proc` file), its metrics are omitted and a `# collector error:` comment appears in the output; all other modules still respond
 - Shuts down cleanly on SIGTERM or Ctrl+C
 
+## Deployment (systemd)
+
+```bash
+# install binary
+sudo cp check-my-server /usr/local/bin/
+sudo chmod +x /usr/local/bin/check-my-server
+
+# install unit file
+sudo cp contrib/check-my-server.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now check-my-server
+
+# verify
+systemctl status check-my-server
+```
+
+To override config, edit `/etc/systemd/system/check-my-server.service` and run `systemctl daemon-reload`.
+
 ## Prometheus config
 
 ```yaml
