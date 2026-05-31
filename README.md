@@ -142,3 +142,24 @@ scrape_configs:
 | `node_network_transmit_packets_total` | `device` | Packets transmitted |
 | `node_network_transmit_errors_total` | `device` | Transmit errors |
 | `node_network_transmit_drop_total` | `device` | Transmit drops |
+
+### Disk I/O
+| Metric | Labels | Description |
+|--------|--------|-------------|
+| `node_disk_reads_completed_total` | `device` | Reads completed |
+| `node_disk_writes_completed_total` | `device` | Writes completed |
+| `node_disk_read_bytes_total` | `device` | Bytes read |
+| `node_disk_written_bytes_total` | `device` | Bytes written |
+| `node_disk_read_time_ms_total` | `device` | Time spent reading (ms) |
+| `node_disk_write_time_ms_total` | `device` | Time spent writing (ms) |
+
+### Pressure (PSI)
+Available on Linux 4.20+. Omitted silently on older kernels.
+
+| Metric | Description |
+|--------|-------------|
+| `node_pressure_cpu_some_avg10/60/300` | % time any task stalled waiting for CPU |
+| `node_pressure_memory_some_avg10/60/300` | % time any task stalled waiting for memory |
+| `node_pressure_memory_full_avg10/60/300` | % time all tasks stalled waiting for memory |
+| `node_pressure_io_some_avg10/60/300` | % time any task stalled waiting for I/O |
+| `node_pressure_io_full_avg10/60/300` | % time all tasks stalled waiting for I/O |
