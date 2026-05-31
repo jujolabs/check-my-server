@@ -7,13 +7,42 @@
 
 Lightweight Prometheus exporter for Linux server metrics. Reads from `/proc` directly — no node_exporter required.
 
-## Usage
+## Getting Started
+
+### Run directly
 
 ```bash
-cargo build --release
-./target/release/check-my-server
-# Listening on http://0.0.0.0:9100/metrics
+curl -fsSL https://github.com/jujolabs/check-my-server/releases/latest/download/check-my-server \
+  -o check-my-server && chmod +x check-my-server
+
+# defaults: listen on 0.0.0.0:9100, collect every 15s
+./check-my-server
+
+# custom config
+CMS_ADDR=0.0.0.0:9100 CMS_INTERVAL=30 RUST_LOG=debug ./check-my-server
 ```
+
+### systemd service (recommended for servers)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/jujolabs/check-my-server/main/contrib/install.sh | sudo bash
+```
+
+Downloads the latest binary, installs the systemd unit, and starts the service on boot.
+To override config, edit `/etc/systemd/system/check-my-server.service` and run `systemctl daemon-reload`.
+
+<details>
+<summary>Manual steps</summary>
+
+```bash
+sudo cp check-my-server /usr/local/bin/
+sudo chmod +x /usr/local/bin/check-my-server
+sudo cp contrib/check-my-server.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now check-my-server
+```
+
+</details>
 
 ## Endpoints
 
@@ -40,29 +69,6 @@ CMS_ADDR=0.0.0.0:9200 CMS_INTERVAL=30 RUST_LOG=debug ./target/release/check-my-s
 - Scrapes are served instantly from memory — zero collection work per request
 - If a module fails (e.g. unreadable `/proc` file), its metrics are omitted and a `# collector error:` comment appears in the output; all other modules still respond
 - Shuts down cleanly on SIGTERM or Ctrl+C
-
-## Deployment (systemd)
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/jujolabs/check-my-server/main/contrib/install.sh | sudo bash
-```
-
-Downloads the latest binary, installs the systemd unit, and starts the service. Requires `curl` and `systemd`.
-
-<details>
-<summary>Manual steps</summary>
-
-```bash
-sudo cp check-my-server /usr/local/bin/
-sudo chmod +x /usr/local/bin/check-my-server
-sudo cp contrib/check-my-server.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now check-my-server
-```
-
-</details>
-
-To override config, edit `/etc/systemd/system/check-my-server.service` and run `systemctl daemon-reload`.
 
 ## Prometheus config
 
