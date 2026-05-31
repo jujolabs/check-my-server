@@ -1,2 +1,89 @@
 # check-my-server
-Check overall server health
+
+![Rust](https://img.shields.io/badge/language-Rust-orange?logo=rust)
+![Platform](https://img.shields.io/badge/platform-Linux-lightgrey?logo=linux)
+![Prometheus](https://img.shields.io/badge/metrics-Prometheus-orange?logo=prometheus)
+
+Lightweight Prometheus exporter for Linux server metrics. Reads from `/proc` directly — no node_exporter required.
+
+## Usage
+
+```bash
+cargo build --release
+./target/release/check-my-server
+# Listening on http://0.0.0.0:9100/metrics
+```
+
+Scrape endpoint: `GET http://<host>:9100/metrics`
+
+## How it works
+
+- Collects all metrics once at startup, then every **15 seconds** in the background
+- Scrapes are served instantly from memory — zero collection work per request
+- If a module fails (e.g. unreadable `/proc` file), its metrics are omitted; all other modules still respond
+
+## Prometheus config
+
+```yaml
+scrape_configs:
+  - job_name: check-my-server
+    static_configs:
+      - targets: ['<host>:9100']
+```
+
+## Metrics
+
+### Host
+| Metric | Description |
+|--------|-------------|
+| `node_uname_info{hostname, os_type, kernel_release, arch}` | System info (value always 1) |
+
+### System
+| Metric | Description |
+|--------|-------------|
+| `node_uptime_seconds` | System uptime |
+| `node_load1` | 1-minute load average |
+| `node_load5` | 5-minute load average |
+| `node_load15` | 15-minute load average |
+| `node_procs_running` | Currently running processes |
+| `node_procs_total` | Total processes |
+| `node_filefd_allocated` | Open file descriptors |
+| `node_filefd_maximum` | File descriptor limit |
+
+### Memory
+| Metric | Description |
+|--------|-------------|
+| `node_memory_total_bytes` | Total RAM |
+| `node_memory_available_bytes` | Available RAM |
+| `node_memory_used_bytes` | Used RAM |
+| `node_swap_total_bytes` | Total swap |
+| `node_swap_free_bytes` | Free swap |
+| `node_swap_used_bytes` | Used swap |
+
+### CPU
+| Metric | Description |
+|--------|-------------|
+| `node_cpu_usage_percent` | Overall CPU usage |
+| `node_cpu_user_percent` | User-space CPU time |
+| `node_cpu_system_percent` | Kernel CPU time |
+| `node_cpu_iowait_percent` | I/O wait time |
+| `node_cpu_idle_percent` | Idle time |
+
+### Disk
+| Metric | Labels | Description |
+|--------|--------|-------------|
+| `node_filesystem_size_bytes` | `mountpoint` | Total filesystem size |
+| `node_filesystem_used_bytes` | `mountpoint` | Used space |
+| `node_filesystem_avail_bytes` | `mountpoint` | Available space |
+
+### Network
+| Metric | Labels | Description |
+|--------|--------|-------------|
+| `node_network_receive_bytes_total` | `device` | Bytes received |
+| `node_network_receive_packets_total` | `device` | Packets received |
+| `node_network_receive_errors_total` | `device` | Receive errors |
+| `node_network_receive_drop_total` | `device` | Receive drops |
+| `node_network_transmit_bytes_total` | `device` | Bytes transmitted |
+| `node_network_transmit_packets_total` | `device` | Packets transmitted |
+| `node_network_transmit_errors_total` | `device` | Transmit errors |
+| `node_network_transmit_drop_total` | `device` | Transmit drops |
