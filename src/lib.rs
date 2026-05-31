@@ -4,7 +4,7 @@ mod metrics;
 use anyhow::Result;
 use axum::{Router, extract::State, http::StatusCode, response::IntoResponse, routing::get};
 use std::sync::{Arc, RwLock};
-use tokio::time::{Duration, interval};
+use tokio::{signal, time::{Duration, interval}};
 
 enum CheckResult<T> {
     Success(T),
@@ -60,19 +60,20 @@ pub fn collect_metrics() -> String {
 
 type Cache = Arc<RwLock<String>>;
 
-async fn poll_loop(cache: Cache) {
-    let mut ticker = interval(Duration::from_secs(15));
+async fn poll_loop(cache: Cache, interval_secs: u64) {
+    let mut ticker = interval(Duration::from_secs(interval_secs));
     ticker.tick().await; // first tick immediate — skip, startup already collected
     loop {
         ticker.tick().await;
-        if let Ok(body) = tokio::task::spawn_blocking(|| metrics::format(collect_report())).await {
-            *cache.write().unwrap() = body;
+        match tokio::task::spawn_blocking(|| metrics::format(collect_report())).await {
+            Ok(body) => *cache.write().unwrap_or_else(|e| e.into_inner()) = body,
+            Err(e) => tracing::warn!("poll collection failed: {e}"),
         }
     }
 }
 
 async fn metrics_handler(State(cache): State<Cache>) -> impl IntoResponse {
-    let body = cache.read().unwrap().clone();
+    let body = cache.read().unwrap_or_else(|e| e.into_inner()).clone();
     (
         StatusCode::OK,
         [("content-type", "text/plain; version=0.0.4; charset=utf-8")],
@@ -80,18 +81,43 @@ async fn metrics_handler(State(cache): State<Cache>) -> impl IntoResponse {
     )
 }
 
-pub async fn serve(addr: &str) -> Result<()> {
+async fn health_handler() -> impl IntoResponse {
+    (StatusCode::OK, "ok")
+}
+
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        signal::ctrl_c().await.expect("ctrl-c handler");
+    };
+    #[cfg(unix)]
+    let sigterm = async {
+        signal::unix::signal(signal::unix::SignalKind::terminate())
+            .expect("sigterm handler")
+            .recv()
+            .await;
+    };
+    #[cfg(not(unix))]
+    let sigterm = std::future::pending::<()>();
+    tokio::select! { _ = ctrl_c => {}, _ = sigterm => {} }
+}
+
+pub async fn serve(addr: &str, interval_secs: u64) -> Result<()> {
+    tracing_subscriber::fmt::init();
+
     let initial = tokio::task::spawn_blocking(|| metrics::format(collect_report())).await?;
     let cache: Cache = Arc::new(RwLock::new(initial));
 
-    tokio::spawn(poll_loop(cache.clone()));
+    tokio::spawn(poll_loop(cache.clone(), interval_secs));
 
     let app = Router::new()
         .route("/metrics", get(metrics_handler))
+        .route("/health", get(health_handler))
         .with_state(cache);
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
-    println!("Listening on http://{addr}/metrics");
-    axum::serve(listener, app).await?;
+    tracing::info!("listening on http://{addr}/metrics");
+    axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown_signal())
+        .await?;
     Ok(())
 }

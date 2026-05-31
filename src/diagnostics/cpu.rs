@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use serde::Serialize;
-use std::{fs, thread, time::Duration};
+use std::{fs, sync::Mutex, thread, time::Duration};
 
 #[derive(Serialize)]
 pub struct CpuReport {
@@ -11,22 +11,36 @@ pub struct CpuReport {
     pub idle_percent: f64,
 }
 
+static PREV: Mutex<Option<StatSnapshot>> = Mutex::new(None);
+
 pub fn collect() -> Result<CpuReport> {
-    let a = read_stat()?;
-    thread::sleep(Duration::from_millis(200));
-    let b = read_stat()?;
+    let current = read_stat()?;
+    let mut guard = PREV.lock().unwrap_or_else(|e| e.into_inner());
 
-    let total = (b.total - a.total) as f64;
-    if total == 0.0 {
-        anyhow::bail!("cpu stat delta is zero");
+    if let Some(prev) = guard.take() {
+        let report = compute_report(&prev, &current);
+        *guard = Some(current);
+        report
+    } else {
+        // first call — no previous snapshot, fall back to 200ms sample
+        drop(guard);
+        let a = read_stat()?;
+        thread::sleep(Duration::from_millis(200));
+        let b = read_stat()?;
+        let report = compute_report(&a, &b);
+        *PREV.lock().unwrap_or_else(|e| e.into_inner()) = Some(b);
+        report
     }
+}
 
+fn compute_report(a: &StatSnapshot, b: &StatSnapshot) -> Result<CpuReport> {
+    let total = (b.total - a.total) as f64;
+    anyhow::ensure!(total > 0.0, "cpu stat delta is zero");
     let pct = |delta: u64| (delta as f64 / total) * 100.0;
-
     let idle_percent = pct(b.idle - a.idle);
     Ok(CpuReport {
-        usage_percent: 100.0 - idle_percent,
-        user_percent: pct(b.user - a.user),
+        usage_percent:  100.0 - idle_percent,
+        user_percent:   pct(b.user   - a.user),
         system_percent: pct(b.system - a.system),
         iowait_percent: pct(b.iowait - a.iowait),
         idle_percent,

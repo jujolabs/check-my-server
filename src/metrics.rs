@@ -15,66 +15,91 @@ pub fn format(report: Report) -> String {
         }
     }
 
-    if let CheckResult::Success(s) = report.system {
-        g(&mut out, "node_uptime_seconds", "System uptime in seconds", &[], s.uptime_seconds);
-        g(&mut out, "node_load1", "1 minute load average", &[], s.load_avg_1);
-        g(&mut out, "node_load5", "5 minute load average", &[], s.load_avg_5);
-        g(&mut out, "node_load15", "15 minute load average", &[], s.load_avg_15);
-        g(&mut out, "node_procs_running", "Running processes", &[], s.running_procs as f64);
-        g(&mut out, "node_procs_total", "Total processes", &[], s.total_procs as f64);
-        g(&mut out, "node_filefd_allocated", "Open file descriptors", &[], s.open_fds as f64);
-        g(&mut out, "node_filefd_maximum", "Maximum file descriptors", &[], s.max_fds as f64);
-    }
-
-    if let CheckResult::Success(m) = report.memory {
-        g(&mut out, "node_memory_total_bytes", "Total memory bytes", &[], kb(m.total_kb));
-        g(&mut out, "node_memory_available_bytes", "Available memory bytes", &[], kb(m.available_kb));
-        g(&mut out, "node_memory_used_bytes", "Used memory bytes", &[], kb(m.used_kb));
-        g(&mut out, "node_swap_total_bytes", "Total swap bytes", &[], kb(m.swap_total_kb));
-        g(&mut out, "node_swap_free_bytes", "Free swap bytes", &[], kb(m.swap_free_kb));
-        g(&mut out, "node_swap_used_bytes", "Used swap bytes", &[], kb(m.swap_used_kb));
-    }
-
-    if let CheckResult::Success(c) = report.cpu {
-        g(&mut out, "node_cpu_usage_percent", "CPU usage percent", &[], c.usage_percent);
-        g(&mut out, "node_cpu_user_percent", "CPU user time percent", &[], c.user_percent);
-        g(&mut out, "node_cpu_system_percent", "CPU system time percent", &[], c.system_percent);
-        g(&mut out, "node_cpu_iowait_percent", "CPU iowait percent", &[], c.iowait_percent);
-        g(&mut out, "node_cpu_idle_percent", "CPU idle percent", &[], c.idle_percent);
-    }
-
-    if let CheckResult::Success(d) = report.disk {
-        hdr(&mut out, "node_filesystem_size_bytes", "Filesystem size in bytes");
-        for f in &d.filesystems {
-            line(&mut out, "node_filesystem_size_bytes", &[("mountpoint", &f.mount)], kb(f.total_kb));
+    match report.system {
+        CheckResult::Success(s) => {
+            g(&mut out, "node_uptime_seconds", "System uptime in seconds", &[], s.uptime_seconds);
+            g(&mut out, "node_load1", "1 minute load average", &[], s.load_avg_1);
+            g(&mut out, "node_load5", "5 minute load average", &[], s.load_avg_5);
+            g(&mut out, "node_load15", "15 minute load average", &[], s.load_avg_15);
+            g(&mut out, "node_procs_running", "Running processes", &[], s.running_procs as f64);
+            g(&mut out, "node_procs_total", "Total processes", &[], s.total_procs as f64);
+            g(&mut out, "node_filefd_allocated", "Open file descriptors", &[], s.open_fds as f64);
+            g(&mut out, "node_filefd_maximum", "Maximum file descriptors", &[], s.max_fds as f64);
         }
-        hdr(&mut out, "node_filesystem_used_bytes", "Filesystem used bytes");
-        for f in &d.filesystems {
-            line(&mut out, "node_filesystem_used_bytes", &[("mountpoint", &f.mount)], kb(f.used_kb));
-        }
-        hdr(&mut out, "node_filesystem_avail_bytes", "Filesystem available bytes");
-        for f in &d.filesystems {
-            line(&mut out, "node_filesystem_avail_bytes", &[("mountpoint", &f.mount)], kb(f.available_kb));
+        CheckResult::Failure { error } => {
+            out.push_str(&format!("# collector error: system: {error}\n"));
         }
     }
 
-    if let CheckResult::Success(n) = report.network {
-        macro_rules! net_family {
-            ($name:expr, $help:expr, $field:ident) => {
-                hdr(&mut out, $name, $help);
-                for i in &n.interfaces {
-                    line(&mut out, $name, &[("device", &i.interface)], i.$field as f64);
-                }
-            };
+    match report.memory {
+        CheckResult::Success(m) => {
+            g(&mut out, "node_memory_total_bytes", "Total memory bytes", &[], kb(m.total_kb));
+            g(&mut out, "node_memory_available_bytes", "Available memory bytes", &[], kb(m.available_kb));
+            g(&mut out, "node_memory_used_bytes", "Used memory bytes", &[], kb(m.used_kb));
+            g(&mut out, "node_swap_total_bytes", "Total swap bytes", &[], kb(m.swap_total_kb));
+            g(&mut out, "node_swap_free_bytes", "Free swap bytes", &[], kb(m.swap_free_kb));
+            g(&mut out, "node_swap_used_bytes", "Used swap bytes", &[], kb(m.swap_used_kb));
         }
-        net_family!("node_network_receive_bytes_total",    "Bytes received",         rx_bytes);
-        net_family!("node_network_receive_packets_total",  "Packets received",       rx_packets);
-        net_family!("node_network_receive_errors_total",   "Receive errors",         rx_errors);
-        net_family!("node_network_receive_drop_total",     "Receive drops",          rx_dropped);
-        net_family!("node_network_transmit_bytes_total",   "Bytes transmitted",      tx_bytes);
-        net_family!("node_network_transmit_packets_total", "Packets transmitted",    tx_packets);
-        net_family!("node_network_transmit_errors_total",  "Transmit errors",        tx_errors);
-        net_family!("node_network_transmit_drop_total",    "Transmit drops",         tx_dropped);
+        CheckResult::Failure { error } => {
+            out.push_str(&format!("# collector error: memory: {error}\n"));
+        }
+    }
+
+    match report.cpu {
+        CheckResult::Success(c) => {
+            g(&mut out, "node_cpu_usage_percent", "CPU usage percent", &[], c.usage_percent);
+            g(&mut out, "node_cpu_user_percent", "CPU user time percent", &[], c.user_percent);
+            g(&mut out, "node_cpu_system_percent", "CPU system time percent", &[], c.system_percent);
+            g(&mut out, "node_cpu_iowait_percent", "CPU iowait percent", &[], c.iowait_percent);
+            g(&mut out, "node_cpu_idle_percent", "CPU idle percent", &[], c.idle_percent);
+        }
+        CheckResult::Failure { error } => {
+            out.push_str(&format!("# collector error: cpu: {error}\n"));
+        }
+    }
+
+    match report.disk {
+        CheckResult::Success(d) => {
+            hdr(&mut out, "node_filesystem_size_bytes", "Filesystem size in bytes");
+            for f in &d.filesystems {
+                line(&mut out, "node_filesystem_size_bytes", &[("mountpoint", &f.mount)], kb(f.total_kb));
+            }
+            hdr(&mut out, "node_filesystem_used_bytes", "Filesystem used bytes");
+            for f in &d.filesystems {
+                line(&mut out, "node_filesystem_used_bytes", &[("mountpoint", &f.mount)], kb(f.used_kb));
+            }
+            hdr(&mut out, "node_filesystem_avail_bytes", "Filesystem available bytes");
+            for f in &d.filesystems {
+                line(&mut out, "node_filesystem_avail_bytes", &[("mountpoint", &f.mount)], kb(f.available_kb));
+            }
+        }
+        CheckResult::Failure { error } => {
+            out.push_str(&format!("# collector error: disk: {error}\n"));
+        }
+    }
+
+    match report.network {
+        CheckResult::Success(n) => {
+            macro_rules! net_family {
+                ($name:expr, $help:expr, $field:ident) => {
+                    hdr(&mut out, $name, $help);
+                    for i in &n.interfaces {
+                        line(&mut out, $name, &[("device", &i.interface)], i.$field as f64);
+                    }
+                };
+            }
+            net_family!("node_network_receive_bytes_total",    "Bytes received",      rx_bytes);
+            net_family!("node_network_receive_packets_total",  "Packets received",    rx_packets);
+            net_family!("node_network_receive_errors_total",   "Receive errors",      rx_errors);
+            net_family!("node_network_receive_drop_total",     "Receive drops",       rx_dropped);
+            net_family!("node_network_transmit_bytes_total",   "Bytes transmitted",   tx_bytes);
+            net_family!("node_network_transmit_packets_total", "Packets transmitted", tx_packets);
+            net_family!("node_network_transmit_errors_total",  "Transmit errors",     tx_errors);
+            net_family!("node_network_transmit_drop_total",    "Transmit drops",      tx_dropped);
+        }
+        CheckResult::Failure { error } => {
+            out.push_str(&format!("# collector error: network: {error}\n"));
+        }
     }
 
     out
