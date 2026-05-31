@@ -14,13 +14,30 @@ cargo build --release
 # Listening on http://0.0.0.0:9100/metrics
 ```
 
-Scrape endpoint: `GET http://<host>:9100/metrics`
+## Endpoints
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /metrics` | Prometheus text format metrics |
+| `GET /health` | Returns `200 ok` — use for liveness probes |
+
+## Configuration
+
+| Env var | Default | Description |
+|---------|---------|-------------|
+| `CMS_ADDR` | `0.0.0.0:9100` | Listen address |
+| `CMS_INTERVAL` | `15` | Collection interval in seconds |
+
+```bash
+CMS_ADDR=0.0.0.0:9200 CMS_INTERVAL=30 ./target/release/check-my-server
+```
 
 ## How it works
 
-- Collects all metrics once at startup, then every **15 seconds** in the background
+- Collects all metrics once at startup, then every `CMS_INTERVAL` seconds in the background
 - Scrapes are served instantly from memory — zero collection work per request
-- If a module fails (e.g. unreadable `/proc` file), its metrics are omitted; all other modules still respond
+- If a module fails (e.g. unreadable `/proc` file), its metrics are omitted and a `# collector error:` comment appears in the output; all other modules still respond
+- Shuts down cleanly on SIGTERM or Ctrl+C
 
 ## Prometheus config
 
