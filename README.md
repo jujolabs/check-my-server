@@ -3,7 +3,7 @@
 ![Rust](https://img.shields.io/badge/language-Rust-orange?logo=rust)
 ![Platform](https://img.shields.io/badge/platform-Linux-lightgrey?logo=linux)
 ![Prometheus](https://img.shields.io/badge/metrics-Prometheus-orange?logo=prometheus)
-![Version](https://img.shields.io/badge/version-0.3.1-blue)
+![Version](https://img.shields.io/badge/version-0.4.0-blue)
 
 Lightweight Prometheus exporter for Linux server metrics. Reads from `/proc` directly — no node_exporter required.
 
