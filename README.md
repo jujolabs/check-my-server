@@ -28,9 +28,10 @@ cargo build --release
 |---------|---------|-------------|
 | `CMS_ADDR` | `0.0.0.0:9100` | Listen address |
 | `CMS_INTERVAL` | `15` | Collection interval in seconds |
+| `RUST_LOG` | `info` | Log level (`error`, `warn`, `info`, `debug`, `trace`) |
 
 ```bash
-CMS_ADDR=0.0.0.0:9200 CMS_INTERVAL=30 ./target/release/check-my-server
+CMS_ADDR=0.0.0.0:9200 CMS_INTERVAL=30 RUST_LOG=debug ./target/release/check-my-server
 ```
 
 ## How it works
