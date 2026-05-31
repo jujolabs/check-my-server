@@ -102,6 +102,51 @@ pub fn format(report: Report) -> String {
         }
     }
 
+    match report.diskstats {
+        CheckResult::Success(d) => {
+            macro_rules! disk_family {
+                ($name:expr, $help:expr, $field:ident) => {
+                    hdr(&mut out, $name, $help);
+                    for dev in &d.devices {
+                        line(&mut out, $name, &[("device", &dev.device)], dev.$field as f64);
+                    }
+                };
+            }
+            disk_family!("node_disk_reads_completed_total",  "Disk reads completed",       reads_completed);
+            disk_family!("node_disk_writes_completed_total", "Disk writes completed",      writes_completed);
+            disk_family!("node_disk_read_bytes_total",       "Disk bytes read",            read_bytes);
+            disk_family!("node_disk_written_bytes_total",    "Disk bytes written",         written_bytes);
+            disk_family!("node_disk_read_time_ms_total",     "Time spent reading ms",      read_ms);
+            disk_family!("node_disk_write_time_ms_total",    "Time spent writing ms",      write_ms);
+        }
+        CheckResult::Failure { error } => {
+            out.push_str(&format!("# collector error: diskstats: {error}\n"));
+        }
+    }
+
+    match report.pressure {
+        CheckResult::Success(p) => {
+            g(&mut out, "node_pressure_cpu_some_avg10",       "CPU pressure some avg10",       &[], p.cpu_some.avg10);
+            g(&mut out, "node_pressure_cpu_some_avg60",       "CPU pressure some avg60",       &[], p.cpu_some.avg60);
+            g(&mut out, "node_pressure_cpu_some_avg300",      "CPU pressure some avg300",      &[], p.cpu_some.avg300);
+            g(&mut out, "node_pressure_memory_some_avg10",    "Memory pressure some avg10",    &[], p.memory_some.avg10);
+            g(&mut out, "node_pressure_memory_some_avg60",    "Memory pressure some avg60",    &[], p.memory_some.avg60);
+            g(&mut out, "node_pressure_memory_some_avg300",   "Memory pressure some avg300",   &[], p.memory_some.avg300);
+            g(&mut out, "node_pressure_memory_full_avg10",    "Memory pressure full avg10",    &[], p.memory_full.avg10);
+            g(&mut out, "node_pressure_memory_full_avg60",    "Memory pressure full avg60",    &[], p.memory_full.avg60);
+            g(&mut out, "node_pressure_memory_full_avg300",   "Memory pressure full avg300",   &[], p.memory_full.avg300);
+            g(&mut out, "node_pressure_io_some_avg10",        "IO pressure some avg10",        &[], p.io_some.avg10);
+            g(&mut out, "node_pressure_io_some_avg60",        "IO pressure some avg60",        &[], p.io_some.avg60);
+            g(&mut out, "node_pressure_io_some_avg300",       "IO pressure some avg300",       &[], p.io_some.avg300);
+            g(&mut out, "node_pressure_io_full_avg10",        "IO pressure full avg10",        &[], p.io_full.avg10);
+            g(&mut out, "node_pressure_io_full_avg60",        "IO pressure full avg60",        &[], p.io_full.avg60);
+            g(&mut out, "node_pressure_io_full_avg300",       "IO pressure full avg300",       &[], p.io_full.avg300);
+        }
+        CheckResult::Failure { error } => {
+            out.push_str(&format!("# collector error: pressure: {error}\n"));
+        }
+    }
+
     out
 }
 

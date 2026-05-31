@@ -21,12 +21,14 @@ impl<T> From<Result<T>> for CheckResult<T> {
 }
 
 struct Report {
-    host: CheckResult<diagnostics::host::HostReport>,
-    system: CheckResult<diagnostics::system::SystemReport>,
-    memory: CheckResult<diagnostics::memory::MemoryReport>,
-    cpu: CheckResult<diagnostics::cpu::CpuReport>,
-    disk: CheckResult<diagnostics::disk::DiskReport>,
-    network: CheckResult<diagnostics::network::NetworkReport>,
+    host:      CheckResult<diagnostics::host::HostReport>,
+    system:    CheckResult<diagnostics::system::SystemReport>,
+    memory:    CheckResult<diagnostics::memory::MemoryReport>,
+    cpu:       CheckResult<diagnostics::cpu::CpuReport>,
+    disk:      CheckResult<diagnostics::disk::DiskReport>,
+    diskstats: CheckResult<diagnostics::diskstats::DiskStatsReport>,
+    network:   CheckResult<diagnostics::network::NetworkReport>,
+    pressure:  CheckResult<diagnostics::pressure::PressureReport>,
 }
 
 fn join<T: Send + 'static>(handle: std::thread::JoinHandle<Result<T>>) -> CheckResult<T> {
@@ -37,20 +39,24 @@ fn join<T: Send + 'static>(handle: std::thread::JoinHandle<Result<T>>) -> CheckR
 }
 
 fn collect_report() -> Report {
-    let host    = std::thread::spawn(diagnostics::host::collect);
-    let system  = std::thread::spawn(diagnostics::system::collect);
-    let memory  = std::thread::spawn(diagnostics::memory::collect);
-    let cpu     = std::thread::spawn(diagnostics::cpu::collect);
-    let disk    = std::thread::spawn(diagnostics::disk::collect);
-    let network = std::thread::spawn(diagnostics::network::collect);
+    let host      = std::thread::spawn(diagnostics::host::collect);
+    let system    = std::thread::spawn(diagnostics::system::collect);
+    let memory    = std::thread::spawn(diagnostics::memory::collect);
+    let cpu       = std::thread::spawn(diagnostics::cpu::collect);
+    let disk      = std::thread::spawn(diagnostics::disk::collect);
+    let diskstats = std::thread::spawn(diagnostics::diskstats::collect);
+    let network   = std::thread::spawn(diagnostics::network::collect);
+    let pressure  = std::thread::spawn(diagnostics::pressure::collect);
 
     Report {
-        host:    join(host),
-        system:  join(system),
-        memory:  join(memory),
-        cpu:     join(cpu),
-        disk:    join(disk),
-        network: join(network),
+        host:      join(host),
+        system:    join(system),
+        memory:    join(memory),
+        cpu:       join(cpu),
+        disk:      join(disk),
+        diskstats: join(diskstats),
+        network:   join(network),
+        pressure:  join(pressure),
     }
 }
 
