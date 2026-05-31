@@ -44,18 +44,23 @@ CMS_ADDR=0.0.0.0:9200 CMS_INTERVAL=30 RUST_LOG=debug ./target/release/check-my-s
 ## Deployment (systemd)
 
 ```bash
-# install binary
+curl -fsSL https://raw.githubusercontent.com/jujolabs/check-my-server/main/contrib/install.sh | sudo bash
+```
+
+Downloads the latest binary, installs the systemd unit, and starts the service. Requires `curl` and `systemd`.
+
+<details>
+<summary>Manual steps</summary>
+
+```bash
 sudo cp check-my-server /usr/local/bin/
 sudo chmod +x /usr/local/bin/check-my-server
-
-# install unit file
 sudo cp contrib/check-my-server.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now check-my-server
-
-# verify
-systemctl status check-my-server
 ```
+
+</details>
 
 To override config, edit `/etc/systemd/system/check-my-server.service` and run `systemctl daemon-reload`.
 
