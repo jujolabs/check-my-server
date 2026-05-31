@@ -5,9 +5,16 @@ BINARY=/usr/local/bin/check-my-server
 SERVICE=/etc/systemd/system/check-my-server.service
 REPO=jujolabs/check-my-server
 
-echo "Installing check-my-server..."
+ARCH=$(uname -m)
+case "$ARCH" in
+  x86_64)  SUFFIX="x86_64-linux" ;;
+  aarch64) SUFFIX="aarch64-linux" ;;
+  *)        echo "Unsupported architecture: $ARCH"; exit 1 ;;
+esac
 
-curl -fsSL "https://github.com/$REPO/releases/latest/download/check-my-server" \
+echo "Installing check-my-server ($ARCH)..."
+
+curl -fsSL "https://github.com/$REPO/releases/latest/download/check-my-server-$SUFFIX" \
   -o "$BINARY"
 chmod +x "$BINARY"
 

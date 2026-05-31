@@ -11,8 +11,15 @@ Lightweight Prometheus exporter for Linux server metrics. Reads from `/proc` dir
 
 ### Run directly
 
+Supports **x86_64** and **aarch64** (ARM64). Download the binary matching your architecture:
+
 ```bash
-curl -fsSL https://github.com/jujolabs/check-my-server/releases/latest/download/check-my-server \
+# x86_64
+curl -fsSL https://github.com/jujolabs/check-my-server/releases/latest/download/check-my-server-x86_64-linux \
+  -o check-my-server && chmod +x check-my-server
+
+# aarch64
+curl -fsSL https://github.com/jujolabs/check-my-server/releases/latest/download/check-my-server-aarch64-linux \
   -o check-my-server && chmod +x check-my-server
 
 # defaults: listen on 0.0.0.0:9100, collect every 15s
