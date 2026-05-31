@@ -102,7 +102,12 @@ async fn shutdown_signal() {
 }
 
 pub async fn serve(addr: &str, interval_secs: u64) -> Result<()> {
-    tracing_subscriber::fmt::init();
+    tracing_subscriber::fmt()
+        .with_env_filter(
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")),
+        )
+        .init();
 
     let initial = tokio::task::spawn_blocking(|| metrics::format(collect_report())).await?;
     let cache: Cache = Arc::new(RwLock::new(initial));
@@ -115,7 +120,7 @@ pub async fn serve(addr: &str, interval_secs: u64) -> Result<()> {
         .with_state(cache);
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
-    tracing::info!("listening on http://{addr}/metrics");
+    tracing::info!("listening — metrics http://{addr}/metrics  health http://{addr}/health  interval {interval_secs}s");
     axum::serve(listener, app)
         .with_graceful_shutdown(shutdown_signal())
         .await?;
