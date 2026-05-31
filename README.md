@@ -77,6 +77,17 @@ CMS_ADDR=0.0.0.0:9200 CMS_INTERVAL=30 RUST_LOG=debug ./target/release/check-my-s
 - If a module fails (e.g. unreadable `/proc` file), its metrics are omitted and a `# collector error:` comment appears in the output; all other modules still respond
 - Shuts down cleanly on SIGTERM or Ctrl+C
 
+## Grafana Dashboard
+
+A pre-built dashboard covering all metrics is in `contrib/dashboard.json`.
+
+**Import:**
+1. Grafana → Dashboards → Import
+2. Upload `contrib/dashboard.json`
+3. Select your Prometheus data source
+
+Includes: overview stats, CPU breakdown, memory, filesystem usage, disk I/O throughput + latency, network rx/tx, load averages, processes, file descriptors, and PSI pressure panels.
+
 ## Prometheus config
 
 ```yaml
