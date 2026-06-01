@@ -7,7 +7,7 @@
 
 Lightweight Prometheus exporter for Linux server metrics. Reads from `/proc` directly — no node_exporter required.
 
-<img src="contrib/grafana-dashboard.png" width="800" alt="Grafana Dashboard" />
+<img src="contrib/grafana-dashboard.png" width="1000" alt="Grafana Dashboard" />
 
 ## Getting Started
 
