@@ -1,0 +1,87 @@
+groups:
+  - name: check-my-server
+    rules:
+
+      - alert: InstanceDown
+        expr: up{job="check-my-server"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Instance {{ $labels.instance }} down"
+          description: "check-my-server on {{ $labels.instance }} has been unreachable for more than 1 minute."
+
+      - alert: HighCpuUsage
+        expr: node_cpu_usage_percent > 90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is {{ $value | printf \"%.1f\" }}% (threshold: 90%)."
+
+      - alert: HighIoWait
+        expr: node_cpu_iowait_percent > 20
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High I/O wait on {{ $labels.instance }}"
+          description: "CPU I/O wait is {{ $value | printf \"%.1f\" }}% (threshold: 20%)."
+
+      - alert: HighLoadAverage
+        expr: node_load1 > 4
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High load average on {{ $labels.instance }}"
+          description: "1-minute load average is {{ $value | printf \"%.2f\" }}. Adjust threshold to match CPU count."
+
+      - alert: HighMemoryUsage
+        expr: >
+          (node_memory_used_bytes / node_memory_total_bytes) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is {{ $value | printf \"%.1f\" }}% (threshold: 85%)."
+
+      - alert: LowDiskSpace
+        expr: >
+          (node_filesystem_avail_bytes / node_filesystem_size_bytes) * 100 < 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }} ({{ $labels.mountpoint }})"
+          description: "Available space on {{ $labels.mountpoint }} is {{ $value | printf \"%.1f\" }}% (threshold: 10%)."
+
+      - alert: CriticalDiskSpace
+        expr: >
+          (node_filesystem_avail_bytes / node_filesystem_size_bytes) * 100 < 5
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Critical disk space on {{ $labels.instance }} ({{ $labels.mountpoint }})"
+          description: "Available space on {{ $labels.mountpoint }} is {{ $value | printf \"%.1f\" }}% (threshold: 5%)."
+
+      - alert: HighMemoryPressure
+        expr: node_pressure_memory_full_avg60 > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory pressure on {{ $labels.instance }}"
+          description: "Memory full pressure (60s avg) is {{ $value | printf \"%.1f\" }}% (threshold: 10%). All tasks stalling on memory."
+
+      - alert: HighIoPressure
+        expr: node_pressure_io_full_avg60 > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High I/O pressure on {{ $labels.instance }}"
+          description: "I/O full pressure (60s avg) is {{ $value | printf \"%.1f\" }}% (threshold: 10%). All tasks stalling on I/O."

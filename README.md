@@ -90,6 +90,37 @@ A pre-built dashboard covering all metrics is in `contrib/dashboard.json`.
 
 Includes: overview stats, CPU breakdown, memory, filesystem usage, disk I/O throughput + latency, network rx/tx, load averages, processes, file descriptors, and PSI pressure panels.
 
+## Alert Rules
+
+Pre-built Prometheus alert rules are in `contrib/alerts.yml`.
+
+| Alert | Condition | Severity |
+|-------|-----------|----------|
+| `InstanceDown` | Exporter unreachable for 1m | critical |
+| `HighCpuUsage` | CPU > 90% for 5m | warning |
+| `HighIoWait` | I/O wait > 20% for 5m | warning |
+| `HighLoadAverage` | load1 > 4 for 5m | warning |
+| `HighMemoryUsage` | Memory used > 85% for 5m | warning |
+| `LowDiskSpace` | Disk available < 10% for 5m | warning |
+| `CriticalDiskSpace` | Disk available < 5% for 5m | critical |
+| `HighMemoryPressure` | Memory full PSI avg60 > 10% for 5m | warning |
+| `HighIoPressure` | I/O full PSI avg60 > 10% for 5m | warning |
+
+> **Note:** `HighLoadAverage` defaults to threshold 4. Adjust to match your CPU count.
+> PSI alerts require Linux 4.20+; Prometheus silently drops them if the metric is absent.
+
+**Enable in `prometheus.yml`:**
+
+```yaml
+rule_files:
+  - /etc/prometheus/alerts/check-my-server.yml
+
+scrape_configs:
+  - job_name: check-my-server
+    static_configs:
+      - targets: ['<host>:9100']
+```
+
 ## Prometheus config
 
 ```yaml
