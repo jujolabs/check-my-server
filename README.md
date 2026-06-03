@@ -122,15 +122,6 @@ scrape_configs:
       - targets: ['<host>:9100']
 ```
 
-## Prometheus config
-
-```yaml
-scrape_configs:
-  - job_name: check-my-server
-    static_configs:
-      - targets: ['<host>:9100']
-```
-
 ## Metrics
 
 ### Host
