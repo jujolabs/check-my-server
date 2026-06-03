@@ -59,6 +59,7 @@ sudo systemctl enable --now check-my-server
 |----------|-------------|
 | `GET /metrics` | Prometheus text format metrics |
 | `GET /health` | Returns `200 ok` — use for liveness probes |
+| `GET /version` | Returns binary version string |
 
 ## Configuration
 
@@ -88,7 +89,7 @@ A pre-built dashboard covering all metrics is in `contrib/dashboard.json`.
 2. Upload `contrib/dashboard.json`
 3. Select your Prometheus data source
 
-Includes: overview stats, CPU breakdown, memory, filesystem usage, disk I/O throughput + latency, network rx/tx, load averages, processes, file descriptors, and PSI pressure panels.
+Includes: overview stats, CPU breakdown, per-core CPU usage, memory, filesystem usage, disk I/O throughput + latency, network rx/tx, load averages, processes, file descriptors, and PSI pressure panels.
 
 ## Alert Rules
 
@@ -160,13 +161,15 @@ scrape_configs:
 | `node_swap_used_bytes` | Used swap |
 
 ### CPU
-| Metric | Description |
-|--------|-------------|
-| `node_cpu_usage_percent` | Overall CPU usage |
-| `node_cpu_user_percent` | User-space CPU time |
-| `node_cpu_system_percent` | Kernel CPU time |
-| `node_cpu_iowait_percent` | I/O wait time |
-| `node_cpu_idle_percent` | Idle time |
+| Metric | Labels | Description |
+|--------|--------|-------------|
+| `node_cpu_usage_percent` | | Overall CPU usage |
+| `node_cpu_user_percent` | | User-space CPU time |
+| `node_cpu_system_percent` | | Kernel CPU time |
+| `node_cpu_iowait_percent` | | I/O wait time |
+| `node_cpu_idle_percent` | | Idle time |
+| `node_cpu_core_usage_percent` | `cpu` | Per-core usage |
+| `node_cpu_core_idle_percent` | `cpu` | Per-core idle time |
 
 ### Disk
 | Metric | Labels | Description |
