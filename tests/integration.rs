@@ -7,4 +7,5 @@ fn collect_metrics_returns_output() {
     assert!(!out.is_empty(), "metrics output should not be empty");
     assert!(out.contains("node_uptime_seconds"), "expected uptime metric");
     assert!(out.contains("node_memory_total_bytes"), "expected memory metric");
+    assert!(out.contains("node_cpu_core_usage_percent"), "expected per-core cpu metric");
 }

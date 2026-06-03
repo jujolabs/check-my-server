@@ -102,6 +102,7 @@ dependencies = [
  "libc",
  "serde",
  "tokio",
+ "tower",
  "tracing",
  "tracing-subscriber",
 ]

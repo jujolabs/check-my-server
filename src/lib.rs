@@ -91,6 +91,10 @@ async fn health_handler() -> impl IntoResponse {
     (StatusCode::OK, "ok")
 }
 
+async fn version_handler() -> impl IntoResponse {
+    (StatusCode::OK, concat!("check-my-server ", env!("CARGO_PKG_VERSION"), "\n"))
+}
+
 async fn shutdown_signal() {
     let ctrl_c = async {
         signal::ctrl_c().await.expect("ctrl-c handler");
@@ -105,6 +109,61 @@ async fn shutdown_signal() {
     #[cfg(not(unix))]
     let sigterm = std::future::pending::<()>();
     tokio::select! { _ = ctrl_c => {}, _ = sigterm => {} }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::body::to_bytes;
+    use tower::ServiceExt;
+
+    #[tokio::test]
+    async fn test_version_endpoint() {
+        let app = Router::new()
+            .route("/version", get(version_handler));
+        let req = axum::http::Request::builder()
+            .uri("/version")
+            .body(axum::body::Body::empty())
+            .unwrap();
+        let resp = app.oneshot(req).await.unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let body = to_bytes(resp.into_body(), usize::MAX).await.unwrap();
+        let text = std::str::from_utf8(&body).unwrap();
+        assert!(text.starts_with("check-my-server "), "got: {text:?}");
+        assert!(text.contains(env!("CARGO_PKG_VERSION")));
+    }
+
+    #[test]
+    fn test_format_per_core_metrics() {
+        use diagnostics::cpu::{CpuCoreReport, CpuReport};
+
+        let cpu_report = CpuReport {
+            usage_percent: 30.0,
+            user_percent: 20.0,
+            system_percent: 10.0,
+            iowait_percent: 0.0,
+            idle_percent: 70.0,
+            cores: vec![
+                CpuCoreReport { core: 0, usage_percent: 25.0, idle_percent: 75.0 },
+                CpuCoreReport { core: 1, usage_percent: 35.0, idle_percent: 65.0 },
+            ],
+        };
+        let report = Report {
+            host:      CheckResult::Failure { error: "skip".into() },
+            system:    CheckResult::Failure { error: "skip".into() },
+            memory:    CheckResult::Failure { error: "skip".into() },
+            cpu:       CheckResult::Success(cpu_report),
+            disk:      CheckResult::Failure { error: "skip".into() },
+            diskstats: CheckResult::Failure { error: "skip".into() },
+            network:   CheckResult::Failure { error: "skip".into() },
+            pressure:  CheckResult::Failure { error: "skip".into() },
+        };
+        let out = metrics::format(report);
+        assert!(out.contains(r#"node_cpu_core_usage_percent{cpu="0"} 25"#), "got: {out}");
+        assert!(out.contains(r#"node_cpu_core_usage_percent{cpu="1"} 35"#), "got: {out}");
+        assert!(out.contains(r#"node_cpu_core_idle_percent{cpu="0"} 75"#),  "got: {out}");
+        assert!(out.contains(r#"node_cpu_core_idle_percent{cpu="1"} 65"#),  "got: {out}");
+    }
 }
 
 pub async fn serve(addr: &str, interval_secs: u64) -> Result<()> {
@@ -123,10 +182,11 @@ pub async fn serve(addr: &str, interval_secs: u64) -> Result<()> {
     let app = Router::new()
         .route("/metrics", get(metrics_handler))
         .route("/health", get(health_handler))
+        .route("/version", get(version_handler))
         .with_state(cache);
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
-    tracing::info!("listening — metrics http://{addr}/metrics  health http://{addr}/health  interval {interval_secs}s");
+    tracing::info!("listening — metrics http://{addr}/metrics  health http://{addr}/health  version http://{addr}/version  interval {interval_secs}s");
     axum::serve(listener, app)
         .with_graceful_shutdown(shutdown_signal())
         .await?;

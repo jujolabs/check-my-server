@@ -3,15 +3,23 @@ use serde::Serialize;
 use std::{fs, sync::Mutex, thread, time::Duration};
 
 #[derive(Serialize)]
+pub struct CpuCoreReport {
+    pub core: usize,
+    pub usage_percent: f64,
+    pub idle_percent: f64,
+}
+
+#[derive(Serialize)]
 pub struct CpuReport {
     pub usage_percent: f64,
     pub user_percent: f64,
     pub system_percent: f64,
     pub iowait_percent: f64,
     pub idle_percent: f64,
+    pub cores: Vec<CpuCoreReport>,
 }
 
-static PREV: Mutex<Option<StatSnapshot>> = Mutex::new(None);
+static PREV: Mutex<Option<FullSnapshot>> = Mutex::new(None);
 
 pub fn collect() -> Result<CpuReport> {
     let current = read_stat()?;
@@ -33,17 +41,32 @@ pub fn collect() -> Result<CpuReport> {
     }
 }
 
-fn compute_report(a: &StatSnapshot, b: &StatSnapshot) -> Result<CpuReport> {
-    let total = (b.total - a.total) as f64;
+fn compute_report(a: &FullSnapshot, b: &FullSnapshot) -> Result<CpuReport> {
+    let total = (b.agg.total - a.agg.total) as f64;
     anyhow::ensure!(total > 0.0, "cpu stat delta is zero");
     let pct = |delta: u64| (delta as f64 / total) * 100.0;
-    let idle_percent = pct(b.idle - a.idle);
+    let idle_percent = pct(b.agg.idle - a.agg.idle);
+
+    let cores = a.cores.iter().zip(b.cores.iter()).enumerate()
+        .map(|(i, (ca, cb))| {
+            let core_total = (cb.total - ca.total) as f64;
+            let (core_usage, core_idle) = if core_total > 0.0 {
+                let idle = ((cb.idle - ca.idle) as f64 / core_total) * 100.0;
+                (100.0 - idle, idle)
+            } else {
+                (0.0, 100.0)
+            };
+            CpuCoreReport { core: i, usage_percent: core_usage, idle_percent: core_idle }
+        })
+        .collect();
+
     Ok(CpuReport {
         usage_percent:  100.0 - idle_percent,
-        user_percent:   pct(b.user   - a.user),
-        system_percent: pct(b.system - a.system),
-        iowait_percent: pct(b.iowait - a.iowait),
+        user_percent:   pct(b.agg.user   - a.agg.user),
+        system_percent: pct(b.agg.system - a.agg.system),
+        iowait_percent: pct(b.agg.iowait - a.agg.iowait),
         idle_percent,
+        cores,
     })
 }
 
@@ -55,10 +78,26 @@ struct StatSnapshot {
     total: u64,
 }
 
-fn read_stat() -> Result<StatSnapshot> {
+struct FullSnapshot {
+    agg: StatSnapshot,
+    cores: Vec<StatSnapshot>,
+}
+
+fn read_stat() -> Result<FullSnapshot> {
     let content = fs::read_to_string("/proc/stat").context("read /proc/stat")?;
-    let line = content.lines().next().context("empty /proc/stat")?;
-    parse_stat_line(line)
+    let mut lines = content.lines();
+    let agg_line = lines.next().context("empty /proc/stat")?;
+    let agg = parse_stat_line(agg_line)?;
+    let mut cores = Vec::new();
+    for line in lines {
+        // per-core lines start with "cpu0", "cpu1", etc.
+        if line.starts_with("cpu") && line.len() > 3 && line.chars().nth(3).is_some_and(|c| c.is_ascii_digit()) {
+            cores.push(parse_stat_line(line)?);
+        } else {
+            break;
+        }
+    }
+    Ok(FullSnapshot { agg, cores })
 }
 
 fn parse_stat_line(line: &str) -> Result<StatSnapshot> {
@@ -99,5 +138,50 @@ mod tests {
     fn test_parse_stat_line_zeros() {
         let s = parse_stat_line("cpu  0 0 0 0 0 0 0 0 0 0").unwrap();
         assert_eq!(s.total, 0);
+    }
+
+    #[test]
+    fn test_compute_report_with_cores() {
+        let a = FullSnapshot {
+            agg: StatSnapshot { user: 100, system: 50, idle: 800, iowait: 10, total: 980 },
+            cores: vec![
+                StatSnapshot { user: 50, system: 25, idle: 400, iowait: 5, total: 490 },
+                StatSnapshot { user: 50, system: 25, idle: 400, iowait: 5, total: 490 },
+            ],
+        };
+        let b = FullSnapshot {
+            agg: StatSnapshot { user: 200, system: 100, idle: 1600, iowait: 20, total: 1960 },
+            cores: vec![
+                StatSnapshot { user: 100, system: 50, idle: 800, iowait: 10, total: 980 },
+                StatSnapshot { user: 100, system: 50, idle: 800, iowait: 10, total: 980 },
+            ],
+        };
+        let r = compute_report(&a, &b).unwrap();
+        assert_eq!(r.cores.len(), 2);
+        assert_eq!(r.cores[0].core, 0);
+        assert_eq!(r.cores[1].core, 1);
+        let expected_idle = (400.0_f64 / 490.0) * 100.0;
+        assert!((r.cores[0].idle_percent  - expected_idle).abs() < 0.001);
+        assert!((r.cores[0].usage_percent - (100.0 - expected_idle)).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_compute_report_no_cores() {
+        let a = FullSnapshot {
+            agg: StatSnapshot { user: 100, system: 50, idle: 800, iowait: 10, total: 980 },
+            cores: vec![],
+        };
+        let b = FullSnapshot {
+            agg: StatSnapshot { user: 200, system: 100, idle: 1600, iowait: 20, total: 1960 },
+            cores: vec![],
+        };
+        let r = compute_report(&a, &b).unwrap();
+        assert!(r.cores.is_empty());
+    }
+
+    #[test]
+    fn test_read_stat_parses_cores() {
+        let snap = read_stat().unwrap();
+        assert!(!snap.cores.is_empty(), "expected per-core cpu lines in /proc/stat");
     }
 }

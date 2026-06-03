@@ -38,11 +38,10 @@ pub fn collect() -> Result<DiskReport> {
             continue;
         }
 
-        if let Ok(entry) = statvfs_entry(mount) {
-            if entry.total_kb > 0 {
+        if let Ok(entry) = statvfs_entry(mount)
+            && entry.total_kb > 0 {
                 filesystems.push(entry);
             }
-        }
     }
 
     Ok(DiskReport { filesystems })

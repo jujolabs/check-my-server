@@ -52,6 +52,18 @@ pub fn format(report: Report) -> String {
             g(&mut out, "node_cpu_system_percent", "CPU system time percent", &[], c.system_percent);
             g(&mut out, "node_cpu_iowait_percent", "CPU iowait percent", &[], c.iowait_percent);
             g(&mut out, "node_cpu_idle_percent", "CPU idle percent", &[], c.idle_percent);
+            if !c.cores.is_empty() {
+                hdr(&mut out, "node_cpu_core_usage_percent", "Per-CPU core usage percent");
+                for core in &c.cores {
+                    let id = core.core.to_string();
+                    line(&mut out, "node_cpu_core_usage_percent", &[("cpu", &id)], core.usage_percent);
+                }
+                hdr(&mut out, "node_cpu_core_idle_percent", "Per-CPU core idle percent");
+                for core in &c.cores {
+                    let id = core.core.to_string();
+                    line(&mut out, "node_cpu_core_idle_percent", &[("cpu", &id)], core.idle_percent);
+                }
+            }
         }
         CheckResult::Failure { error } => {
             out.push_str(&format!("# collector error: cpu: {error}\n"));
