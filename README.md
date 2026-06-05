@@ -99,6 +99,7 @@ Pre-built Prometheus alert rules are in `contrib/alerts.yml`.
 |-------|-----------|----------|
 | `InstanceDown` | Exporter unreachable for 1m | critical |
 | `HighCpuUsage` | CPU > 90% for 5m | warning |
+| `CoreCpuSaturation` | Any single core > 95% for 5m | warning |
 | `HighIoWait` | I/O wait > 20% for 5m | warning |
 | `HighLoadAverage` | load1 > 4 for 5m | warning |
 | `HighMemoryUsage` | Memory used > 85% for 5m | warning |

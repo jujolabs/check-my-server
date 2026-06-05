@@ -20,6 +20,15 @@ groups:
           summary: "High CPU usage on {{ $labels.instance }}"
           description: "CPU usage is {{ $value | printf \"%.1f\" }}% (threshold: 90%)."
 
+      - alert: CoreCpuSaturation
+        expr: node_cpu_core_usage_percent > 95
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CPU core {{ $labels.cpu }} saturated on {{ $labels.instance }}"
+          description: "Core {{ $labels.cpu }} usage is {{ $value | printf \"%.1f\" }}% (threshold: 95%). Aggregate CPU may look normal."
+
       - alert: HighIoWait
         expr: node_cpu_iowait_percent > 20
         for: 5m
