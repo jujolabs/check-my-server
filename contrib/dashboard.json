@@ -1772,6 +1772,10 @@
       },
       "id": 28,
       "options": {
+        "annotations": {
+          "clustering": -1,
+          "multiLane": false
+        },
         "legend": {
           "calcs": [],
           "displayMode": "list",
@@ -1784,6 +1788,7 @@
           "sort": "none"
         }
       },
+      "pluginVersion": "13.0.1+security-01",
       "targets": [
         {
           "datasource": {
@@ -1808,7 +1813,6 @@
           "color": {
             "mode": "thresholds"
           },
-          "mappings": [],
           "max": 100,
           "min": 0,
           "thresholds": {
@@ -1840,9 +1844,9 @@
       "id": 29,
       "options": {
         "displayMode": "gradient",
-        "fillOpacity": 80,
         "legend": {
-          "displayMode": "hidden",
+          "calcs": [],
+          "displayMode": "list",
           "placement": "bottom",
           "showLegend": false
         },
@@ -1860,14 +1864,9 @@
         },
         "showUnfilled": true,
         "sizing": "auto",
-        "text": {},
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
-        },
         "valueMode": "color"
       },
+      "pluginVersion": "13.0.1+security-01",
       "targets": [
         {
           "datasource": {
@@ -1875,7 +1874,6 @@
             "uid": "${datasource}"
           },
           "expr": "node_cpu_core_usage_percent{instance=~\"$instance\"}",
-          "instant": true,
           "legendFormat": "cpu {{cpu}}",
           "refId": "A"
         }
@@ -1896,10 +1894,7 @@
     "list": [
       {
         "allowCustomValue": true,
-        "current": {
-          "text": "prometheus",
-          "value": "dfnroq5nyudxcf"
-        },
+        "current": {},
         "hide": 0,
         "includeAll": false,
         "label": "Data source",
@@ -1914,10 +1909,7 @@
       },
       {
         "allowCustomValue": true,
-        "current": {
-          "text": "192.168.68.110:9100",
-          "value": "192.168.68.110:9100"
-        },
+        "current": {},
         "datasource": {
           "type": "prometheus",
           "uid": "${datasource}"
