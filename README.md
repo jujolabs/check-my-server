@@ -60,6 +60,7 @@ sudo systemctl enable --now check-my-server
 | `GET /metrics` | Prometheus text format metrics |
 | `GET /health` | Returns `200 ok` — use for liveness probes |
 | `GET /version` | Returns binary version string |
+| `GET /status` | JSON snapshot of all collectors |
 
 ## Configuration
 
@@ -103,8 +104,11 @@ Pre-built Prometheus alert rules are in `contrib/alerts.yml`.
 | `HighIoWait` | I/O wait > 20% for 5m | warning |
 | `HighLoadAverage` | load1 > 4 for 5m | warning |
 | `HighMemoryUsage` | Memory used > 85% for 5m | warning |
+| `HighSwapUsage` | Swap used > 80% for 5m | warning |
 | `LowDiskSpace` | Disk available < 10% for 5m | warning |
 | `CriticalDiskSpace` | Disk available < 5% for 5m | critical |
+| `NetworkErrors` | rx+tx error rate > 1/s per device for 5m | warning |
+| `DiskIOSaturation` | Disk I/O service time > 800ms/s per device for 5m | warning |
 | `HighMemoryPressure` | Memory full PSI avg60 > 10% for 5m | warning |
 | `HighIoPressure` | I/O full PSI avg60 > 10% for 5m | warning |
 

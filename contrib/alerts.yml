@@ -77,6 +77,39 @@ groups:
           summary: "Critical disk space on {{ $labels.instance }} ({{ $labels.mountpoint }})"
           description: "Available space on {{ $labels.mountpoint }} is {{ $value | printf \"%.1f\" }}% (threshold: 5%)."
 
+      - alert: HighSwapUsage
+        expr: >
+          node_swap_total_bytes > 0 and
+          (node_swap_used_bytes / node_swap_total_bytes) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High swap usage on {{ $labels.instance }}"
+          description: "Swap usage is {{ $value | printf \"%.1f\" }}% (threshold: 80%). Memory pressure likely."
+
+      - alert: NetworkErrors
+        expr: >
+          rate(node_network_receive_errors_total[5m]) +
+          rate(node_network_transmit_errors_total[5m]) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Network errors on {{ $labels.instance }} device {{ $labels.device }}"
+          description: "Combined rx+tx error rate is {{ $value | printf \"%.2f\" }}/s on {{ $labels.device }}."
+
+      - alert: DiskIOSaturation
+        expr: >
+          rate(node_disk_read_time_ms_total[5m]) +
+          rate(node_disk_write_time_ms_total[5m]) > 800
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disk I/O saturation on {{ $labels.instance }} device {{ $labels.device }}"
+          description: "Disk {{ $labels.device }} combined I/O service time is {{ $value | printf \"%.0f\" }}ms/s (threshold: 800 = 80% utilization)."
+
       - alert: HighMemoryPressure
         expr: node_pressure_memory_full_avg60 > 10
         for: 5m

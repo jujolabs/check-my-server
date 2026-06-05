@@ -9,6 +9,26 @@ use tokio::{
     time::{Duration, interval},
 };
 
+#[derive(serde::Serialize)]
+#[serde(untagged)]
+enum StatusEntry<T: serde::Serialize> {
+    Ok(T),
+    Err { error: String },
+}
+
+#[derive(serde::Serialize)]
+struct StatusReport {
+    version: &'static str,
+    host: StatusEntry<diagnostics::host::HostReport>,
+    system: StatusEntry<diagnostics::system::SystemReport>,
+    memory: StatusEntry<diagnostics::memory::MemoryReport>,
+    cpu: StatusEntry<diagnostics::cpu::CpuReport>,
+    disk: StatusEntry<diagnostics::disk::DiskReport>,
+    diskstats: StatusEntry<diagnostics::diskstats::DiskStatsReport>,
+    network: StatusEntry<diagnostics::network::NetworkReport>,
+    pressure: StatusEntry<diagnostics::pressure::PressureReport>,
+}
+
 enum CheckResult<T> {
     Success(T),
     Failure { error: String },
@@ -21,6 +41,15 @@ impl<T> From<Result<T>> for CheckResult<T> {
             Err(e) => CheckResult::Failure {
                 error: format!("{:#}", e),
             },
+        }
+    }
+}
+
+impl<T: serde::Serialize> From<CheckResult<T>> for StatusEntry<T> {
+    fn from(r: CheckResult<T>) -> Self {
+        match r {
+            CheckResult::Success(v) => StatusEntry::Ok(v),
+            CheckResult::Failure { error } => StatusEntry::Err { error },
         }
     }
 }
@@ -103,6 +132,40 @@ async fn version_handler() -> impl IntoResponse {
     )
 }
 
+async fn status_handler() -> impl IntoResponse {
+    let report = match tokio::task::spawn_blocking(collect_report).await {
+        Ok(r) => r,
+        Err(e) => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                [("content-type", "text/plain")],
+                format!("collection panicked: {e}"),
+            )
+                .into_response();
+        }
+    };
+    let status = StatusReport {
+        version: env!("CARGO_PKG_VERSION"),
+        host: report.host.into(),
+        system: report.system.into(),
+        memory: report.memory.into(),
+        cpu: report.cpu.into(),
+        disk: report.disk.into(),
+        diskstats: report.diskstats.into(),
+        network: report.network.into(),
+        pressure: report.pressure.into(),
+    };
+    match serde_json::to_string_pretty(&status) {
+        Ok(json) => (StatusCode::OK, [("content-type", "application/json")], json).into_response(),
+        Err(e) => (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            [("content-type", "text/plain")],
+            e.to_string(),
+        )
+            .into_response(),
+    }
+}
+
 async fn shutdown_signal() {
     let ctrl_c = async {
         signal::ctrl_c().await.expect("ctrl-c handler");
@@ -124,6 +187,40 @@ mod tests {
     use super::*;
     use axum::body::to_bytes;
     use tower::ServiceExt;
+
+    #[tokio::test]
+    async fn test_metrics_endpoint() {
+        let cache: Cache = Arc::new(RwLock::new("test_metric 42\n".to_string()));
+        let app = Router::new()
+            .route("/metrics", get(metrics_handler))
+            .with_state(cache);
+        let req = axum::http::Request::builder()
+            .uri("/metrics")
+            .body(axum::body::Body::empty())
+            .unwrap();
+        let resp = app.oneshot(req).await.unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let ct = resp
+            .headers()
+            .get("content-type")
+            .unwrap()
+            .to_str()
+            .unwrap();
+        assert!(ct.starts_with("text/plain"), "content-type: {ct}");
+        let body = to_bytes(resp.into_body(), usize::MAX).await.unwrap();
+        assert_eq!(&body[..], b"test_metric 42\n");
+    }
+
+    #[tokio::test]
+    async fn test_health_endpoint() {
+        let app = Router::new().route("/health", get(health_handler));
+        let req = axum::http::Request::builder()
+            .uri("/health")
+            .body(axum::body::Body::empty())
+            .unwrap();
+        let resp = app.oneshot(req).await.unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+    }
 
     #[tokio::test]
     async fn test_version_endpoint() {
@@ -224,11 +321,12 @@ pub async fn serve(addr: &str, interval_secs: u64) -> Result<()> {
         .route("/metrics", get(metrics_handler))
         .route("/health", get(health_handler))
         .route("/version", get(version_handler))
+        .route("/status", get(status_handler))
         .with_state(cache);
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
     tracing::info!(
-        "listening — metrics http://{addr}/metrics  health http://{addr}/health  version http://{addr}/version  interval {interval_secs}s"
+        "listening — metrics http://{addr}/metrics  health http://{addr}/health  version http://{addr}/version  status http://{addr}/status  interval {interval_secs}s"
     );
     axum::serve(listener, app)
         .with_graceful_shutdown(shutdown_signal())
