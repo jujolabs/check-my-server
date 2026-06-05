@@ -77,7 +77,8 @@ CMS_ADDR=0.0.0.0:9200 CMS_INTERVAL=30 RUST_LOG=debug ./target/release/check-my-s
 ## How it works
 
 - Collects all metrics once at startup, then every `CMS_INTERVAL` seconds in the background
-- Scrapes are served instantly from memory — zero collection work per request
+- `/metrics` scrapes are served instantly from memory — zero collection work per request
+- `/status` runs a fresh collection on each request (human-use endpoint, not meant for high-frequency scraping)
 - If a module fails (e.g. unreadable `/proc` file), its metrics are omitted and a `# collector error:` comment appears in the output; all other modules still respond
 - Shuts down cleanly on SIGTERM or Ctrl+C
 
