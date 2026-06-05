@@ -42,7 +42,7 @@ jobs:
           sha256sum \
             check-my-server-x86_64-linux/check-my-server-x86_64-linux \
             check-my-server-aarch64-linux/check-my-server-aarch64-linux \
-            | sed 's|.*/||' > checksums.txt
+            | sed 's|  .*/|  |' > checksums.txt
       - uses: softprops/action-gh-release@v2
         with:
           files: |
