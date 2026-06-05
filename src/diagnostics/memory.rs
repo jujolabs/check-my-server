@@ -58,7 +58,11 @@ fn parse_kb(line: &str, key: &str) -> Option<u64> {
 }
 
 fn percent(used: u64, total: u64) -> f64 {
-    if total > 0 { (used as f64 / total as f64) * 100.0 } else { 0.0 }
+    if total > 0 {
+        (used as f64 / total as f64) * 100.0
+    } else {
+        0.0
+    }
 }
 
 #[cfg(test)]
@@ -67,7 +71,10 @@ mod tests {
 
     #[test]
     fn test_parse_kb_valid() {
-        assert_eq!(parse_kb("MemTotal:       16255592 kB", "MemTotal:"), Some(16255592));
+        assert_eq!(
+            parse_kb("MemTotal:       16255592 kB", "MemTotal:"),
+            Some(16255592)
+        );
     }
 
     #[test]

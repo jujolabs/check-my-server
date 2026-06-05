@@ -32,18 +32,18 @@ pub fn collect() -> Result<DiskStatsReport> {
             continue;
         }
 
-        let reads_completed  = fields[3].parse::<u64>().unwrap_or(0);
-        let sectors_read     = fields[5].parse::<u64>().unwrap_or(0);
-        let read_ms          = fields[6].parse::<u64>().unwrap_or(0);
+        let reads_completed = fields[3].parse::<u64>().unwrap_or(0);
+        let sectors_read = fields[5].parse::<u64>().unwrap_or(0);
+        let read_ms = fields[6].parse::<u64>().unwrap_or(0);
         let writes_completed = fields[7].parse::<u64>().unwrap_or(0);
-        let sectors_written  = fields[9].parse::<u64>().unwrap_or(0);
-        let write_ms         = fields[10].parse::<u64>().unwrap_or(0);
+        let sectors_written = fields[9].parse::<u64>().unwrap_or(0);
+        let write_ms = fields[10].parse::<u64>().unwrap_or(0);
 
         devices.push(DiskStatsEntry {
             device: name.to_string(),
             reads_completed,
             writes_completed,
-            read_bytes:    sectors_read    * 512,
+            read_bytes: sectors_read * 512,
             written_bytes: sectors_written * 512,
             read_ms,
             write_ms,

@@ -49,11 +49,11 @@ fn uname() -> Result<Utsname> {
     };
 
     Ok(Utsname {
-        sysname:  to_string(&buf.sysname),
+        sysname: to_string(&buf.sysname),
         nodename: to_string(&buf.nodename),
-        release:  to_string(&buf.release),
-        version:  to_string(&buf.version),
-        machine:  to_string(&buf.machine),
+        release: to_string(&buf.release),
+        version: to_string(&buf.version),
+        machine: to_string(&buf.machine),
     })
 }
 
@@ -68,19 +68,12 @@ fn count_packages() -> (Option<u64>, Option<String>) {
 
     // Debian / Ubuntu
     if Path::new("/var/lib/dpkg/info").is_dir() {
-        let count = fs::read_dir("/var/lib/dpkg/info")
-            .ok()
-            .map(|entries| {
-                entries
-                    .filter_map(|e| e.ok())
-                    .filter(|e| {
-                        e.path()
-                            .extension()
-                            .map(|x| x == "list")
-                            .unwrap_or(false)
-                    })
-                    .count() as u64
-            });
+        let count = fs::read_dir("/var/lib/dpkg/info").ok().map(|entries| {
+            entries
+                .filter_map(|e| e.ok())
+                .filter(|e| e.path().extension().map(|x| x == "list").unwrap_or(false))
+                .count() as u64
+        });
         return (count, Some("dpkg".into()));
     }
 

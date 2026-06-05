@@ -15,12 +15,10 @@ pub struct SystemReport {
 }
 
 pub fn collect() -> Result<SystemReport> {
-    let uptime_seconds = parse_uptime(
-        &fs::read_to_string("/proc/uptime").context("read /proc/uptime")?,
-    )?;
-    let (load_avg_1, load_avg_5, load_avg_15, running_procs, total_procs) = parse_loadavg(
-        &fs::read_to_string("/proc/loadavg").context("read /proc/loadavg")?,
-    )?;
+    let uptime_seconds =
+        parse_uptime(&fs::read_to_string("/proc/uptime").context("read /proc/uptime")?)?;
+    let (load_avg_1, load_avg_5, load_avg_15, running_procs, total_procs) =
+        parse_loadavg(&fs::read_to_string("/proc/loadavg").context("read /proc/loadavg")?)?;
     let (open_fds, max_fds) = parse_file_nr(
         &fs::read_to_string("/proc/sys/fs/file-nr").context("read /proc/sys/fs/file-nr")?,
     )?;
@@ -49,14 +47,26 @@ fn parse_uptime(content: &str) -> Result<f64> {
 fn parse_loadavg(content: &str) -> Result<(f64, f64, f64, u32, u32)> {
     let mut fields = content.split_whitespace();
 
-    let load1  = fields.next().context("load1")?.parse::<f64>().context("parse load1")?;
-    let load5  = fields.next().context("load5")?.parse::<f64>().context("parse load5")?;
-    let load15 = fields.next().context("load15")?.parse::<f64>().context("parse load15")?;
+    let load1 = fields
+        .next()
+        .context("load1")?
+        .parse::<f64>()
+        .context("parse load1")?;
+    let load5 = fields
+        .next()
+        .context("load5")?
+        .parse::<f64>()
+        .context("parse load5")?;
+    let load15 = fields
+        .next()
+        .context("load15")?
+        .parse::<f64>()
+        .context("parse load15")?;
 
     let procs = fields.next().context("procs")?;
     let (running, total) = procs.split_once('/').context("parse procs")?;
     let running_procs = running.parse::<u32>().context("parse running")?;
-    let total_procs   = total.parse::<u32>().context("parse total")?;
+    let total_procs = total.parse::<u32>().context("parse total")?;
 
     Ok((load1, load5, load15, running_procs, total_procs))
 }
@@ -64,9 +74,17 @@ fn parse_loadavg(content: &str) -> Result<(f64, f64, f64, u32, u32)> {
 fn parse_file_nr(content: &str) -> Result<(u64, u64)> {
     let mut fields = content.split_whitespace();
 
-    let open_fds = fields.next().context("open_fds")?.parse::<u64>().context("parse open_fds")?;
+    let open_fds = fields
+        .next()
+        .context("open_fds")?
+        .parse::<u64>()
+        .context("parse open_fds")?;
     fields.next(); // unused (always 0 on Linux 2.6+)
-    let max_fds = fields.next().context("max_fds")?.parse::<u64>().context("parse max_fds")?;
+    let max_fds = fields
+        .next()
+        .context("max_fds")?
+        .parse::<u64>()
+        .context("parse max_fds")?;
 
     Ok((open_fds, max_fds))
 }

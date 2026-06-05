@@ -5,10 +5,18 @@ pub fn format(report: Report) -> String {
 
     match report.host {
         CheckResult::Success(h) => {
-            g(&mut out, "node_uname_info", "System information",
-                &[("hostname", &h.hostname), ("os_type", &h.os_type),
-                  ("kernel_release", &h.kernel_release), ("arch", &h.arch)],
-                1.0);
+            g(
+                &mut out,
+                "node_uname_info",
+                "System information",
+                &[
+                    ("hostname", &h.hostname),
+                    ("os_type", &h.os_type),
+                    ("kernel_release", &h.kernel_release),
+                    ("arch", &h.arch),
+                ],
+                1.0,
+            );
         }
         CheckResult::Failure { error } => {
             out.push_str(&format!("# collector error: host: {error}\n"));
@@ -17,14 +25,62 @@ pub fn format(report: Report) -> String {
 
     match report.system {
         CheckResult::Success(s) => {
-            g(&mut out, "node_uptime_seconds", "System uptime in seconds", &[], s.uptime_seconds);
-            g(&mut out, "node_load1", "1 minute load average", &[], s.load_avg_1);
-            g(&mut out, "node_load5", "5 minute load average", &[], s.load_avg_5);
-            g(&mut out, "node_load15", "15 minute load average", &[], s.load_avg_15);
-            g(&mut out, "node_procs_running", "Running processes", &[], s.running_procs as f64);
-            g(&mut out, "node_procs_total", "Total processes", &[], s.total_procs as f64);
-            g(&mut out, "node_filefd_allocated", "Open file descriptors", &[], s.open_fds as f64);
-            g(&mut out, "node_filefd_maximum", "Maximum file descriptors", &[], s.max_fds as f64);
+            g(
+                &mut out,
+                "node_uptime_seconds",
+                "System uptime in seconds",
+                &[],
+                s.uptime_seconds,
+            );
+            g(
+                &mut out,
+                "node_load1",
+                "1 minute load average",
+                &[],
+                s.load_avg_1,
+            );
+            g(
+                &mut out,
+                "node_load5",
+                "5 minute load average",
+                &[],
+                s.load_avg_5,
+            );
+            g(
+                &mut out,
+                "node_load15",
+                "15 minute load average",
+                &[],
+                s.load_avg_15,
+            );
+            g(
+                &mut out,
+                "node_procs_running",
+                "Running processes",
+                &[],
+                s.running_procs as f64,
+            );
+            g(
+                &mut out,
+                "node_procs_total",
+                "Total processes",
+                &[],
+                s.total_procs as f64,
+            );
+            g(
+                &mut out,
+                "node_filefd_allocated",
+                "Open file descriptors",
+                &[],
+                s.open_fds as f64,
+            );
+            g(
+                &mut out,
+                "node_filefd_maximum",
+                "Maximum file descriptors",
+                &[],
+                s.max_fds as f64,
+            );
         }
         CheckResult::Failure { error } => {
             out.push_str(&format!("# collector error: system: {error}\n"));
@@ -33,12 +89,48 @@ pub fn format(report: Report) -> String {
 
     match report.memory {
         CheckResult::Success(m) => {
-            g(&mut out, "node_memory_total_bytes", "Total memory bytes", &[], kb(m.total_kb));
-            g(&mut out, "node_memory_available_bytes", "Available memory bytes", &[], kb(m.available_kb));
-            g(&mut out, "node_memory_used_bytes", "Used memory bytes", &[], kb(m.used_kb));
-            g(&mut out, "node_swap_total_bytes", "Total swap bytes", &[], kb(m.swap_total_kb));
-            g(&mut out, "node_swap_free_bytes", "Free swap bytes", &[], kb(m.swap_free_kb));
-            g(&mut out, "node_swap_used_bytes", "Used swap bytes", &[], kb(m.swap_used_kb));
+            g(
+                &mut out,
+                "node_memory_total_bytes",
+                "Total memory bytes",
+                &[],
+                kb(m.total_kb),
+            );
+            g(
+                &mut out,
+                "node_memory_available_bytes",
+                "Available memory bytes",
+                &[],
+                kb(m.available_kb),
+            );
+            g(
+                &mut out,
+                "node_memory_used_bytes",
+                "Used memory bytes",
+                &[],
+                kb(m.used_kb),
+            );
+            g(
+                &mut out,
+                "node_swap_total_bytes",
+                "Total swap bytes",
+                &[],
+                kb(m.swap_total_kb),
+            );
+            g(
+                &mut out,
+                "node_swap_free_bytes",
+                "Free swap bytes",
+                &[],
+                kb(m.swap_free_kb),
+            );
+            g(
+                &mut out,
+                "node_swap_used_bytes",
+                "Used swap bytes",
+                &[],
+                kb(m.swap_used_kb),
+            );
         }
         CheckResult::Failure { error } => {
             out.push_str(&format!("# collector error: memory: {error}\n"));
@@ -47,21 +139,69 @@ pub fn format(report: Report) -> String {
 
     match report.cpu {
         CheckResult::Success(c) => {
-            g(&mut out, "node_cpu_usage_percent", "CPU usage percent", &[], c.usage_percent);
-            g(&mut out, "node_cpu_user_percent", "CPU user time percent", &[], c.user_percent);
-            g(&mut out, "node_cpu_system_percent", "CPU system time percent", &[], c.system_percent);
-            g(&mut out, "node_cpu_iowait_percent", "CPU iowait percent", &[], c.iowait_percent);
-            g(&mut out, "node_cpu_idle_percent", "CPU idle percent", &[], c.idle_percent);
+            g(
+                &mut out,
+                "node_cpu_usage_percent",
+                "CPU usage percent",
+                &[],
+                c.usage_percent,
+            );
+            g(
+                &mut out,
+                "node_cpu_user_percent",
+                "CPU user time percent",
+                &[],
+                c.user_percent,
+            );
+            g(
+                &mut out,
+                "node_cpu_system_percent",
+                "CPU system time percent",
+                &[],
+                c.system_percent,
+            );
+            g(
+                &mut out,
+                "node_cpu_iowait_percent",
+                "CPU iowait percent",
+                &[],
+                c.iowait_percent,
+            );
+            g(
+                &mut out,
+                "node_cpu_idle_percent",
+                "CPU idle percent",
+                &[],
+                c.idle_percent,
+            );
             if !c.cores.is_empty() {
-                hdr(&mut out, "node_cpu_core_usage_percent", "Per-CPU core usage percent");
+                hdr(
+                    &mut out,
+                    "node_cpu_core_usage_percent",
+                    "Per-CPU core usage percent",
+                );
                 for core in &c.cores {
                     let id = core.core.to_string();
-                    line(&mut out, "node_cpu_core_usage_percent", &[("cpu", &id)], core.usage_percent);
+                    line(
+                        &mut out,
+                        "node_cpu_core_usage_percent",
+                        &[("cpu", &id)],
+                        core.usage_percent,
+                    );
                 }
-                hdr(&mut out, "node_cpu_core_idle_percent", "Per-CPU core idle percent");
+                hdr(
+                    &mut out,
+                    "node_cpu_core_idle_percent",
+                    "Per-CPU core idle percent",
+                );
                 for core in &c.cores {
                     let id = core.core.to_string();
-                    line(&mut out, "node_cpu_core_idle_percent", &[("cpu", &id)], core.idle_percent);
+                    line(
+                        &mut out,
+                        "node_cpu_core_idle_percent",
+                        &[("cpu", &id)],
+                        core.idle_percent,
+                    );
                 }
             }
         }
@@ -72,17 +212,44 @@ pub fn format(report: Report) -> String {
 
     match report.disk {
         CheckResult::Success(d) => {
-            hdr(&mut out, "node_filesystem_size_bytes", "Filesystem size in bytes");
+            hdr(
+                &mut out,
+                "node_filesystem_size_bytes",
+                "Filesystem size in bytes",
+            );
             for f in &d.filesystems {
-                line(&mut out, "node_filesystem_size_bytes", &[("mountpoint", &f.mount)], kb(f.total_kb));
+                line(
+                    &mut out,
+                    "node_filesystem_size_bytes",
+                    &[("mountpoint", &f.mount)],
+                    kb(f.total_kb),
+                );
             }
-            hdr(&mut out, "node_filesystem_used_bytes", "Filesystem used bytes");
+            hdr(
+                &mut out,
+                "node_filesystem_used_bytes",
+                "Filesystem used bytes",
+            );
             for f in &d.filesystems {
-                line(&mut out, "node_filesystem_used_bytes", &[("mountpoint", &f.mount)], kb(f.used_kb));
+                line(
+                    &mut out,
+                    "node_filesystem_used_bytes",
+                    &[("mountpoint", &f.mount)],
+                    kb(f.used_kb),
+                );
             }
-            hdr(&mut out, "node_filesystem_avail_bytes", "Filesystem available bytes");
+            hdr(
+                &mut out,
+                "node_filesystem_avail_bytes",
+                "Filesystem available bytes",
+            );
             for f in &d.filesystems {
-                line(&mut out, "node_filesystem_avail_bytes", &[("mountpoint", &f.mount)], kb(f.available_kb));
+                line(
+                    &mut out,
+                    "node_filesystem_avail_bytes",
+                    &[("mountpoint", &f.mount)],
+                    kb(f.available_kb),
+                );
             }
         }
         CheckResult::Failure { error } => {
@@ -96,18 +263,55 @@ pub fn format(report: Report) -> String {
                 ($name:expr, $help:expr, $field:ident) => {
                     hdr(&mut out, $name, $help);
                     for i in &n.interfaces {
-                        line(&mut out, $name, &[("device", &i.interface)], i.$field as f64);
+                        line(
+                            &mut out,
+                            $name,
+                            &[("device", &i.interface)],
+                            i.$field as f64,
+                        );
                     }
                 };
             }
-            net_family!("node_network_receive_bytes_total",    "Bytes received",      rx_bytes);
-            net_family!("node_network_receive_packets_total",  "Packets received",    rx_packets);
-            net_family!("node_network_receive_errors_total",   "Receive errors",      rx_errors);
-            net_family!("node_network_receive_drop_total",     "Receive drops",       rx_dropped);
-            net_family!("node_network_transmit_bytes_total",   "Bytes transmitted",   tx_bytes);
-            net_family!("node_network_transmit_packets_total", "Packets transmitted", tx_packets);
-            net_family!("node_network_transmit_errors_total",  "Transmit errors",     tx_errors);
-            net_family!("node_network_transmit_drop_total",    "Transmit drops",      tx_dropped);
+            net_family!(
+                "node_network_receive_bytes_total",
+                "Bytes received",
+                rx_bytes
+            );
+            net_family!(
+                "node_network_receive_packets_total",
+                "Packets received",
+                rx_packets
+            );
+            net_family!(
+                "node_network_receive_errors_total",
+                "Receive errors",
+                rx_errors
+            );
+            net_family!(
+                "node_network_receive_drop_total",
+                "Receive drops",
+                rx_dropped
+            );
+            net_family!(
+                "node_network_transmit_bytes_total",
+                "Bytes transmitted",
+                tx_bytes
+            );
+            net_family!(
+                "node_network_transmit_packets_total",
+                "Packets transmitted",
+                tx_packets
+            );
+            net_family!(
+                "node_network_transmit_errors_total",
+                "Transmit errors",
+                tx_errors
+            );
+            net_family!(
+                "node_network_transmit_drop_total",
+                "Transmit drops",
+                tx_dropped
+            );
         }
         CheckResult::Failure { error } => {
             out.push_str(&format!("# collector error: network: {error}\n"));
@@ -120,16 +324,41 @@ pub fn format(report: Report) -> String {
                 ($name:expr, $help:expr, $field:ident) => {
                     hdr(&mut out, $name, $help);
                     for dev in &d.devices {
-                        line(&mut out, $name, &[("device", &dev.device)], dev.$field as f64);
+                        line(
+                            &mut out,
+                            $name,
+                            &[("device", &dev.device)],
+                            dev.$field as f64,
+                        );
                     }
                 };
             }
-            disk_family!("node_disk_reads_completed_total",  "Disk reads completed",       reads_completed);
-            disk_family!("node_disk_writes_completed_total", "Disk writes completed",      writes_completed);
-            disk_family!("node_disk_read_bytes_total",       "Disk bytes read",            read_bytes);
-            disk_family!("node_disk_written_bytes_total",    "Disk bytes written",         written_bytes);
-            disk_family!("node_disk_read_time_ms_total",     "Time spent reading ms",      read_ms);
-            disk_family!("node_disk_write_time_ms_total",    "Time spent writing ms",      write_ms);
+            disk_family!(
+                "node_disk_reads_completed_total",
+                "Disk reads completed",
+                reads_completed
+            );
+            disk_family!(
+                "node_disk_writes_completed_total",
+                "Disk writes completed",
+                writes_completed
+            );
+            disk_family!("node_disk_read_bytes_total", "Disk bytes read", read_bytes);
+            disk_family!(
+                "node_disk_written_bytes_total",
+                "Disk bytes written",
+                written_bytes
+            );
+            disk_family!(
+                "node_disk_read_time_ms_total",
+                "Time spent reading ms",
+                read_ms
+            );
+            disk_family!(
+                "node_disk_write_time_ms_total",
+                "Time spent writing ms",
+                write_ms
+            );
         }
         CheckResult::Failure { error } => {
             out.push_str(&format!("# collector error: diskstats: {error}\n"));
@@ -138,21 +367,111 @@ pub fn format(report: Report) -> String {
 
     match report.pressure {
         CheckResult::Success(p) => {
-            g(&mut out, "node_pressure_cpu_some_avg10",       "CPU pressure some avg10",       &[], p.cpu_some.avg10);
-            g(&mut out, "node_pressure_cpu_some_avg60",       "CPU pressure some avg60",       &[], p.cpu_some.avg60);
-            g(&mut out, "node_pressure_cpu_some_avg300",      "CPU pressure some avg300",      &[], p.cpu_some.avg300);
-            g(&mut out, "node_pressure_memory_some_avg10",    "Memory pressure some avg10",    &[], p.memory_some.avg10);
-            g(&mut out, "node_pressure_memory_some_avg60",    "Memory pressure some avg60",    &[], p.memory_some.avg60);
-            g(&mut out, "node_pressure_memory_some_avg300",   "Memory pressure some avg300",   &[], p.memory_some.avg300);
-            g(&mut out, "node_pressure_memory_full_avg10",    "Memory pressure full avg10",    &[], p.memory_full.avg10);
-            g(&mut out, "node_pressure_memory_full_avg60",    "Memory pressure full avg60",    &[], p.memory_full.avg60);
-            g(&mut out, "node_pressure_memory_full_avg300",   "Memory pressure full avg300",   &[], p.memory_full.avg300);
-            g(&mut out, "node_pressure_io_some_avg10",        "IO pressure some avg10",        &[], p.io_some.avg10);
-            g(&mut out, "node_pressure_io_some_avg60",        "IO pressure some avg60",        &[], p.io_some.avg60);
-            g(&mut out, "node_pressure_io_some_avg300",       "IO pressure some avg300",       &[], p.io_some.avg300);
-            g(&mut out, "node_pressure_io_full_avg10",        "IO pressure full avg10",        &[], p.io_full.avg10);
-            g(&mut out, "node_pressure_io_full_avg60",        "IO pressure full avg60",        &[], p.io_full.avg60);
-            g(&mut out, "node_pressure_io_full_avg300",       "IO pressure full avg300",       &[], p.io_full.avg300);
+            g(
+                &mut out,
+                "node_pressure_cpu_some_avg10",
+                "CPU pressure some avg10",
+                &[],
+                p.cpu_some.avg10,
+            );
+            g(
+                &mut out,
+                "node_pressure_cpu_some_avg60",
+                "CPU pressure some avg60",
+                &[],
+                p.cpu_some.avg60,
+            );
+            g(
+                &mut out,
+                "node_pressure_cpu_some_avg300",
+                "CPU pressure some avg300",
+                &[],
+                p.cpu_some.avg300,
+            );
+            g(
+                &mut out,
+                "node_pressure_memory_some_avg10",
+                "Memory pressure some avg10",
+                &[],
+                p.memory_some.avg10,
+            );
+            g(
+                &mut out,
+                "node_pressure_memory_some_avg60",
+                "Memory pressure some avg60",
+                &[],
+                p.memory_some.avg60,
+            );
+            g(
+                &mut out,
+                "node_pressure_memory_some_avg300",
+                "Memory pressure some avg300",
+                &[],
+                p.memory_some.avg300,
+            );
+            g(
+                &mut out,
+                "node_pressure_memory_full_avg10",
+                "Memory pressure full avg10",
+                &[],
+                p.memory_full.avg10,
+            );
+            g(
+                &mut out,
+                "node_pressure_memory_full_avg60",
+                "Memory pressure full avg60",
+                &[],
+                p.memory_full.avg60,
+            );
+            g(
+                &mut out,
+                "node_pressure_memory_full_avg300",
+                "Memory pressure full avg300",
+                &[],
+                p.memory_full.avg300,
+            );
+            g(
+                &mut out,
+                "node_pressure_io_some_avg10",
+                "IO pressure some avg10",
+                &[],
+                p.io_some.avg10,
+            );
+            g(
+                &mut out,
+                "node_pressure_io_some_avg60",
+                "IO pressure some avg60",
+                &[],
+                p.io_some.avg60,
+            );
+            g(
+                &mut out,
+                "node_pressure_io_some_avg300",
+                "IO pressure some avg300",
+                &[],
+                p.io_some.avg300,
+            );
+            g(
+                &mut out,
+                "node_pressure_io_full_avg10",
+                "IO pressure full avg10",
+                &[],
+                p.io_full.avg10,
+            );
+            g(
+                &mut out,
+                "node_pressure_io_full_avg60",
+                "IO pressure full avg60",
+                &[],
+                p.io_full.avg60,
+            );
+            g(
+                &mut out,
+                "node_pressure_io_full_avg300",
+                "IO pressure full avg300",
+                &[],
+                p.io_full.avg300,
+            );
         }
         CheckResult::Failure { error } => {
             out.push_str(&format!("# collector error: pressure: {error}\n"));
@@ -170,7 +489,11 @@ fn line(out: &mut String, name: &str, labels: &[(&str, &str)], value: f64) {
     if labels.is_empty() {
         out.push_str(&format!("{name} {value}\n"));
     } else {
-        let ls: String = labels.iter().map(|(k, v)| format!("{k}=\"{v}\"")).collect::<Vec<_>>().join(",");
+        let ls: String = labels
+            .iter()
+            .map(|(k, v)| format!("{k}=\"{v}\""))
+            .collect::<Vec<_>>()
+            .join(",");
         out.push_str(&format!("{name}{{{ls}}} {value}\n"));
     }
 }

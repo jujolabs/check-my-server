@@ -47,13 +47,13 @@ pub(crate) fn parse_line(line: &str) -> Option<InterfaceEntry> {
     // tx: bytes packets errs drop fifo colls carrier compressed
     Some(InterfaceEntry {
         interface,
-        rx_bytes:   *vals.first()?,
+        rx_bytes: *vals.first()?,
         rx_packets: *vals.get(1)?,
-        rx_errors:  *vals.get(2)?,
+        rx_errors: *vals.get(2)?,
         rx_dropped: *vals.get(3)?,
-        tx_bytes:   *vals.get(8)?,
+        tx_bytes: *vals.get(8)?,
         tx_packets: *vals.get(9)?,
-        tx_errors:  *vals.get(10)?,
+        tx_errors: *vals.get(10)?,
         tx_dropped: *vals.get(11)?,
     })
 }

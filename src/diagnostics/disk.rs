@@ -17,9 +17,25 @@ pub struct DiskReport {
 }
 
 const SKIP_FS: &[&str] = &[
-    "tmpfs", "devtmpfs", "proc", "sysfs", "devpts", "cgroup", "cgroup2",
-    "pstore", "bpf", "tracefs", "hugetlbfs", "mqueue", "debugfs", "fusectl",
-    "securityfs", "efivarfs", "autofs", "configfs", "squashfs",
+    "tmpfs",
+    "devtmpfs",
+    "proc",
+    "sysfs",
+    "devpts",
+    "cgroup",
+    "cgroup2",
+    "pstore",
+    "bpf",
+    "tracefs",
+    "hugetlbfs",
+    "mqueue",
+    "debugfs",
+    "fusectl",
+    "securityfs",
+    "efivarfs",
+    "autofs",
+    "configfs",
+    "squashfs",
 ];
 
 pub fn collect() -> Result<DiskReport> {
@@ -39,9 +55,10 @@ pub fn collect() -> Result<DiskReport> {
         }
 
         if let Ok(entry) = statvfs_entry(mount)
-            && entry.total_kb > 0 {
-                filesystems.push(entry);
-            }
+            && entry.total_kb > 0
+        {
+            filesystems.push(entry);
+        }
     }
 
     Ok(DiskReport { filesystems })
